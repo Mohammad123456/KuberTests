@@ -1,0 +1,10 @@
+version: "2.3"
+services:
+    sftp:
+        image: atmoz/sftp
+        ports:
+            - "22000:22"
+        volumes:
+            - ./sftp/mae:/home
+        restart: on-failure
+        command: mae:mae@123:::mae
