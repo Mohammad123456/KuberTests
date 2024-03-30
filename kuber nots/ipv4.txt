@@ -1,0 +1,18 @@
+vim /etc/netplan/00--
+
+#this the network config written by 'subiquity'
+network:
+  ethernets:
+    ens33:
+      addresses:
+        - 192.168.153.147/24
+      routes:
+        - to: default
+          via: 192.168.153.2
+      nameservers:
+        addresses: [8.8.8.8, 4.2.2.4, 192.168.153.2]
+
+
+
+sudo netplan try
+sudo netplan apply

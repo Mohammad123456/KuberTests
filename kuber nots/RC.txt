@@ -1,0 +1,24 @@
+vi rc.yaml
+===============
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: grafana-rc
+spec:
+  replicas: 8
+  selector:
+    app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+      - name: grafana-container
+        image: grafana/grafana
+        ports:
+        - containerPort: 3000
+       restartPolicy: Always
+
+=================
+kubectl apply -f rc.yaml
