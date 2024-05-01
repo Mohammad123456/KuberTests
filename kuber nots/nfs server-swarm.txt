@@ -1,0 +1,87 @@
+NFS SERVER:(192.168.153.147)     MasterSwarm: 192.168.153.151  SlaveSwarm: 192.168.153.153 
+=================================================================
+NFS SERVER:
+
+1-apt install nfs-kernel-server nfs-common -y
+
+2-systemctl status nfs-kernel-server
+  cat /proc/fs/nfsd/versions ======> version
+
+3- # directories that we want to share in nfs (you can start a nginx container for test and copy config files here (docker cp contID:/usr/share/nginx/html .)
+   mkdir -p /var/www/
+   mkdir -p /opt/backups/
+
+4- # nfs root directory that we should have similar directories with 3
+   mkdir -p /srv/nfs4/backups
+   mkdir -p /srv/nfs4/www
+   mkdir /srv/nfs4/data
+
+(chmod 777 *) all files in nfs directory
+
+5- # bind mount directories with nfs
+   mount --bind /var/www/ /srv/nfs4/www/
+   mount --bind /opt/backups/ /srv/nfs4/backups/
+# mount for ever:
+	vi /etc/fstab :
+	/var/www        /srv/nfs4/www   none    bind    0       0
+	/opt/backups    /srv/nfs4/backups       none    bind    0       0
+
+6- # set permissions on nfs directories
+	vi /etc/exports:
+
+	/srv/nfs4       *(rw,sync,no_subtree_check,crossmnt,fsid=0)
+	/srv/nfs4/backups       *(rw,sync,no_subtree_check)
+	/srv/nfs4/www   *(rw,sync,no_subtree_check)
+	/srv/nfs4/data  *(rw,sync,no_subtree_check)
+
+7- # actions configs:
+	exportfs -ar -v
+
+8- # if you have firewall (ufw)
+	ufw allow from 0.0.0.0/0 to any port nfs
+	
+or
+	systemctl disable ufw
+
+============================================================
+CLIENT SIDE:
+
+1- if ubuntu : apt install nfs-common & if Centos: yum install nfs-utils
+2- mkdir -p /mnt/backups ; mkdir -p /mnt/www ; mkdir -p /mnt/data
+3- mount -t nfs -o vers=4 192.168.153.147:/backups /mnt/backups/
+   or 
+   vi /etc/fstab
+   192.168.153.147:/backups        /mnt/backups    nfs     defaults,timeo=900,retrans=5,_netdev    0       0
+   192.168.153.147:/data        /mnt/data    nfs     defaults,timeo=900,retrans=5,_netdev    0       0
+   192.168.153.147:/www        /mnt/www    nfs     defaults,timeo=900,retrans=5,_netdev    0       0
+
+
+
+
+for unmount: 
+umount -t nfs -vvvv 192.168.153.147:/backups /mnt/backups
+
+
+
+
+*********************************************************************************
+SWARM :
+server:
+ docker swarm init --addvertise-addr 192.168.153.150 (or docker swarm init)
+
+client:
+docker swarm join --token SWMTKN-1-59u8f8zldwl7yb77ma9x361ri1ai9x9nwvag1t8d2g5a0xnmaa-9wka0ilh8oer1buw7vp1kkepj 192.168.153.151:2377
+=================================================
+server: 
+docker node ls
+
+server:
+docker service create --name nginn-xswarm --replicas 5 --publish 8080:80 --mount type=bind,source=/mnt/www,target=/usr/share/nginx nginx:latest
+
+now you can change index.htm in nfs server(192.168.153.147) and see 192.168.153.150(or 153):8080 in chrome that change
+*******************************
+
+you can see files that change in containers:
+
+docker exec -dit contID bash
+cd /usr/share/nginx/html ----------> when you change files in nfs server here update files immediately.        

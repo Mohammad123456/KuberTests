@@ -1,0 +1,3 @@
+1- sudo docker rm -v $(sudo docker ps -a -q -f status=exited)
+2- docker volume ls -qf dangling=true | xargs -r docker volume rm
+3- docker rm -f $(docker ps -a -q -f status=exitdocker ps -a -q -f status=exited)

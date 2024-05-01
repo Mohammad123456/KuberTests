@@ -1,0 +1,13 @@
+server:
+ docker swarm init --addvertise-addr 192.168.153.150 (or docker swarm init)
+
+client:
+docker swarm join --token SWMTKN-1-59u8f8zldwl7yb77ma9x361ri1ai9x9nwvag1t8d2g5a0xnmaa-9wka0ilh8oer1buw7vp1kkepj 192.168.153.151:2377
+=================================================
+server: 
+docker node ls
+
+server:
+docker service create --name nginn-xswarm --replicas 5 --publish 8080:80 --mount type=bind,source=/mnt/www,target=/usr/share/nginx nginx:latest
+
+now you can change index.htm in nfs server(192.168.153.147) and see 192.168.153.150(or 153):8080 in chrome that change
